@@ -16,3 +16,9 @@ def getFileList(pth):
 def getDirList(pth):
     files = os.listdir(pth)
     return [f for f in files if os.path.isdir(os.path.join(pth, f))]
+
+def fineFile(top, fname):
+    for root, dirs, files in os.walk(top):
+        if fname in files:
+            return root
+    return None
