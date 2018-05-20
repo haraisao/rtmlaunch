@@ -30,3 +30,16 @@ def findFile2(top, fname):
             if re.search(fname, fn):
                 return [root, files]
     return None
+
+def findFiles(top, flist):
+    for root, dirs, files in os.walk(top):
+        if isMember(flist, files): return root
+    return None
+
+def isMember(flist, files):
+    count = 0
+    for f in flist:
+        if f in files: count += 1
+
+    if len(flist) == count : return True
+    return False
