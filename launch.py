@@ -8,16 +8,52 @@ import time
 import subprocess
 import re 
 
+import rtcpkg as pkg
 import rtc_handle as rh
 
 __name_server__ = None
 __system_editor__ = None
 
-_eSEAT_ = "python \\local\\eSEAT\\src\\eSEAT.py "
+__rtc_home__ = os.getenv('RTC_PKG_HOME')
 
-def rts():
-  global __system_editor__ 
-  __system_editor__ = subprocess.Popen('RTSystemEditorRCP')
+#
+#
+def rtse():
+  global __system_editor__
+  if __system_editor__ :
+    if __system_editor__.poll():
+      __system_editor__ = subprocess.Popen('RTSystemEditorRCP')
+    else:
+      print("RTSystemEditor is already running...")
+  else:
+    __system_editor__ = subprocess.Popen('RTSystemEditorRCP')
+
+
+#
+#
+def eSEAT(fname=""):
+  res = ""
+  _eSEAT_path_ = pkg.findFiles(__rtc_home__, ['eSEAT.py', 'manifest.xml'])
+  if _eSEAT_path_ :
+    if fname : fname = findFile(fname)
+    res = 'python '+ os.path.join(_eSEAT_path_ ,'eSEAT.py ') +fname
+  else:
+    print ('eSEAT not found.')
+  return res
+
+#
+#
+def findFile(fname, top=None):
+  if top == None: top = __rtc_home__
+  pth = pkg.findFile(top, fname)
+  if pth :
+    return os.path.join(pth, fname)
+  else:
+    return fname
+
+def findFile2(pat, top=None):
+  if top == None: top = __rtc_home__
+  return pkg.findFile2(top, pat)
 
 #
 #

@@ -1,0 +1,11 @@
+*.pyc
+*.swp
+dist/
+build/
+seatsat.egg-info/
+contrib/
+test/
+*.log
+workspace/
+rtcmaneger.ref
+logback.xml
