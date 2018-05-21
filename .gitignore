@@ -9,3 +9,5 @@ test/
 workspace/
 rtcmaneger.ref
 logback.xml
+*~
+.vscode/

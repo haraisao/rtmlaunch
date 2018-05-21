@@ -7,6 +7,7 @@ import os
 import time
 import subprocess
 import re 
+import traceback
 
 import rtcpkg as pkg
 import rtc_handle as rh
@@ -147,9 +148,12 @@ class RtcMgr(object):
 class ProcessManager(object):
   #
   #
-  def __init__(self, fname):
+  def __init__(self, fname, stderr=None, stdout=None, stdin=None):
     self.popen = None
     self.env = None
+    self.f_out = stdout
+    self.f_err = stderr
+    self.f_in = stdin
     self.setFile( fname )
   #
   #
@@ -163,12 +167,16 @@ class ProcessManager(object):
       print("Process %s is already running..." % self.exec_file_name)
       return
     try:
-      self.popen = subprocess.Popen(self.exec_file_name, env=self.env)
-      if not self.popen.poll() :
-        with open(self.pid_name, "w") as f:
-          f.write(self.popen.pid)
-          f.close()
+      self.popen = subprocess.Popen(self.exec_file_name, env=self.env, 
+          stdout=self.f_out, stdin=self.f_in, stderr=self.f_err)
+      #if not self.popen.poll() :
+      #  with open(self.pid_name, "w") as f:
+      #    f.write(self.popen.pid)
+      #    f.close()
     except:
+      import traceback
+      traceback.print_exc()
+      print("Error in run()")
       pass
   #
   #
@@ -184,5 +192,6 @@ class ProcessManager(object):
       self.popen.terminate()
       if self.popen.poll():
         self.remove_pid_file()
+
 
 
