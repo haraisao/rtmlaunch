@@ -32,7 +32,7 @@ def rtse():
 
 #
 #
-def eSEAT(fname=""):
+def eSEAT_cmd(fname=""):
   res = ""
   _eSEAT_path_ = pkg.findFiles(__rtc_home__, ['eSEAT.py', 'manifest.xml'])
   if _eSEAT_path_ :
@@ -50,7 +50,7 @@ def findFile(fname, top=None):
   if pth :
     return os.path.join(pth, fname)
   else:
-    return fname
+    return None
 
 def findFile2(pat, top=None):
   if top == None: top = __rtc_home__
@@ -154,7 +154,8 @@ class ProcessManager(object):
     self.f_out = stdout
     self.f_err = stderr
     self.f_in = stdin
-    self.setFile( fname )
+    if fname:
+      self.setFile( fname )
   #
   #
   def setFile(self, fname):
@@ -193,5 +194,33 @@ class ProcessManager(object):
       if self.popen.poll():
         self.remove_pid_file()
 
+class eSEAT(ProcessManager):
+  def __init__(self, fname):
+    ProcessManager.__init__(self, "")
+    self.eSEAT_path = "" 
+    self.seatml = fname
+    self.find_eSEAT()
+    if self.eSEAT_path:
+      self.seatml = self.find_seatml(fname)
+
+  def find_eSEAT(self):
+    global __rtc_home__
+    self.eSEAT_path = pkg.findFiles(__rtc_home__, ['eSEAT.py', 'manifest.xml'])
+    if self.eSEAT_path :
+      self.eSEAT_path = os.path.join(self.eSEAT_path ,'eSEAT.py')
+      print("eSEAT_path = " + self.eSEAT_path)
+
+  def find_seatml(self, fname):
+    res = findFile(fname)
+    if res:
+      print ("Seatml File = "+ res)
+      return res
+    else:
+      print ("Seatml not found: "+fname)
+      return fname
+
+  def run(self, opt = ""):
+    self.setFile( "python "+self.eSEAT_path + " "+opt+" "+  self.seatml)
+    ProcessManager.run(self)
 
 
