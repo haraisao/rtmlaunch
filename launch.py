@@ -37,7 +37,7 @@ def eSEAT(fname=""):
   _eSEAT_path_ = pkg.findFiles(__rtc_home__, ['eSEAT.py', 'manifest.xml'])
   if _eSEAT_path_ :
     if fname : fname = findFile(fname)
-    res = 'python '+ os.path.join(_eSEAT_path_ ,'eSEAT.py ') +fname
+    res = 'python '+ os.path.join(_eSEAT_path_ ,'eSEAT.py -v ') +fname
   else:
     print ('eSEAT not found.')
   return res
