@@ -9,8 +9,6 @@ import subprocess
 import re 
 import traceback
 
-import shlex
-
 import rtcpkg as pkg
 import rtc_handle as rh
 
@@ -166,7 +164,7 @@ class ProcessManager(object):
   #
   #
   def setFile(self, fname):
-    self.exec_file_name = shlex.split(fname)
+    self.exec_file_name = fname.split()
     self.pid_file = os.path.basename(fname)+".pid"
   #
   #
