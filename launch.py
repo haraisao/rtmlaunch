@@ -9,6 +9,8 @@ import subprocess
 import re 
 import traceback
 
+import shlex
+
 import rtcpkg as pkg
 import rtc_handle as rh
 
@@ -16,6 +18,9 @@ __name_server__ = None
 __system_editor__ = None
 
 __rtc_home__ = os.getenv('RTC_PKG_HOME')
+
+if __rtc_home__ is None:
+  __rtc_home__ = os.getenv('HOME')
 
 #
 #
@@ -161,7 +166,7 @@ class ProcessManager(object):
   #
   #
   def setFile(self, fname):
-    self.exec_file_name = fname
+    self.exec_file_name = shlex.split(fname)
     self.pid_file = os.path.basename(fname)+".pid"
   #
   #
@@ -170,8 +175,8 @@ class ProcessManager(object):
       print("Process %s is already running..." % self.exec_file_name)
       return
     try:
-      self.popen = subprocess.Popen(self.exec_file_name, env=self.env, 
-          stdout=self.f_out, stdin=self.f_in, stderr=self.f_err)
+      self.popen = subprocess.Popen(self.exec_file_name, env=self.env,
+         stdout=self.f_out, stdin=self.f_in, stderr=self.f_err)
       #if not self.popen.poll() :
       #  with open(self.pid_name, "w") as f:
       #    f.write(self.popen.pid)
