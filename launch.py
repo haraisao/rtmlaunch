@@ -20,12 +20,15 @@ __rtc_home__ = os.getenv('RTC_PKG_HOME')
 if __rtc_home__ is None:
   __rtc_home__ = os.getenv('HOME')
 
+if __rtc_home__ is None:
+  __rtc_home__ = os.getenv('HOMEPATH')
+
 #
 #
 def rtse():
   global __system_editor__
   if __system_editor__ :
-    if __system_editor__.poll():
+    if __system_editor__.poll() is not None:
       __system_editor__ = subprocess.Popen('RTSystemEditorRCP')
     else:
       print("RTSystemEditor is already running...")
