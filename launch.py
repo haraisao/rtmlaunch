@@ -102,6 +102,8 @@ class RtcMgr(object):
     try:
       self.name_space.list_obj()
     except:
+      import traceback
+      traceback.print_exc()
       print ("Error in update object list")
   #
   def get_handle_names(self, pat=None):
