@@ -210,7 +210,6 @@ class eSEAT(ProcessManager):
     ProcessManager.__init__(self, "")
     self.eSEAT_path = "" 
     name, ext = os.path.splitext(fname)
-    print(name, ext)
     if not ext : extn = ".seatml"
     else: extn = ext
     self.seatml = "".join([name, extn])
