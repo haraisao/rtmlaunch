@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-
+#
+#  Simple Viewer (test implementation...)
 import sys
 import Tkinter
 #import threading

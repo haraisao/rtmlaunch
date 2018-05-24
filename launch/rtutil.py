@@ -1,4 +1,9 @@
 #! python.exe
+#
+#  rtutil.py
+#  Copyright (C) 2015 Isao Hara, All right reserved.
+#  Released under MIT license
+#
 from __future__ import print_function
 import cgi
 import subprocess
