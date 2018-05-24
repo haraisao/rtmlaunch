@@ -202,14 +202,21 @@ class ProcessManager(object):
       if self.popen.poll():
         self.remove_pid_file()
 
+#
+#
+#
 class eSEAT(ProcessManager):
   def __init__(self, fname):
     ProcessManager.__init__(self, "")
     self.eSEAT_path = "" 
-    self.seatml = fname
+    name, ext = os.path.splitext(fname)
+    print(name, ext)
+    if not ext : extn = ".seatml"
+    else: extn = ext
+    self.seatml = "".join([name, extn])
     self.find_eSEAT()
     if self.eSEAT_path:
-      self.seatml = self.find_seatml(fname)
+      self.seatml = self.find_seatml(self.seatml)
 
   def find_eSEAT(self):
     global __rtc_home__
@@ -227,7 +234,7 @@ class eSEAT(ProcessManager):
       print ("Seatml not found: "+fname)
       return fname
 
-  def run(self, opt = ""):
+  def run(self, opt = "-v"):
     self.setFile( "python "+self.eSEAT_path + " "+opt+" "+  self.seatml)
     ProcessManager.run(self)
 
