@@ -17,7 +17,6 @@ from omniORB import any, cdrMarshal, cdrUnmarshal, findType, findTypeCode
 import OpenRTM_aist
 import RTC
 
-
 from CorbaNaming import *
 import SDOPackage
 # from EmbryonicRtc import *
@@ -59,6 +58,7 @@ class NameSpace :
         self.b_len = 10 # iteration cut off no.
         self.rtc_handles = {}
         self.obj_list = {}
+        self.connection_manager = ConnectionManager(self)
 
     def get_object_by_name(self, name, cl=RTC.RTObject):
         ref = self.naming.resolveStr(name)
@@ -122,6 +122,33 @@ class NameSpace :
             tmp = tmp._narrow(CosNaming.NamingContext)
             rslt = self.list_obj1(tmp, nam)
         return rslt
+
+    ########################################
+    '''
+        Append by I.Hara
+    '''
+    def get_handle(self, name):
+        if name.count(".rtc") == 0 : name = name+".rtc"
+        try:
+            return self.rtc_handles[name]
+        except:
+            traceback.print_exc()
+            return None
+
+    def find_handles(self, pat):
+        import re
+        res = {}
+        try:
+            for name in self.rtc_handles:
+                if re.search(pat, name):
+                    res[name] = self.rtc_handles[name]
+        except:
+            trackback.print_exc()
+            pass
+        return res
+
+    #####################################
+
 
 #
 # data conversion
@@ -669,3 +696,203 @@ def make_pipe(comp, handle) :
   handle.out_pipe={}
   for o_port in handle.outports :
     handle.out_pipe[o_port]=OutPipe(comp, handle.outports[o_port])
+
+#
+#  Extensions by Isao Hara
+#   Copyright(C) 2018 Isao Hara, All right reserved.
+
+import os
+import string
+import traceback
+
+class ConnectionManager(object):
+    def __init__(self, ns):
+        self.connections = {}
+        self.name_space = ns
+
+    def get_handle(self, name):
+        return self.name_space.get_handle(name)
+
+    def find_available_connections(self, names):
+        res=[]
+        try:
+            h1 = self.get_handle(names[0])
+            h2 = self.get_handle(names[1])
+
+            for pname1, port1 in h1.outports.items():
+                for pname2, port2 in h2.inports.items():
+                    if port1.data_type == port2.data_type:
+                        res.append((names[0]+":"+pname1, names[1]+":"+pname2))
+            for pname1, port1 in h1.inports.items():
+                for pname2, port2 in h2.outports.items():
+                    if port1.data_type == port2.data_type:
+                        res.append((names[0]+":"+pname1, names[1]+":"+pname2))
+        except:
+            traceback.print_exc()
+
+        return res
+
+    def get_named_dataport(self, name, port):
+        if name.count(".rtc") == 0 : name = name+".rtc"
+        hndl = self.get_handle(name)
+
+        if hndl and port:
+            if port in hndl.inports.keys():
+                return hndl.inports[port]
+            if port in hndl.outports.keys():
+                return hndl.outports[port]
+        return None
+
+    def get_name_port(self, path1):
+        val =  path1.split(":")
+        if len(val) == 1 : return [path1, None]
+        return val
+
+    def create_connection_name(self, path1, path2):
+        name1, port1 = self.get_name_port(path1)
+        name2, port2 = self.get_name_port(path2)
+
+        try:
+            '''
+            pp1 = self.get_named_dataport(name1, port1)
+            pp2 = self.get_named_dataport(name2, port2)
+            pn1 = self.string.join([name1, pp1.name, name2, pp2.name], '_')
+            pn2 = self.string.join([name2, pp2.name, name1, pp1.name], '_')
+            '''
+            pn1 = string.join([name1, port1, name2, port2], '_')
+            pn2 = string.join([name2, port2, name1, port1], '_')
+            return [pn1, pn2]
+
+        except:
+            traceback.print_exc()
+            print ("ERROR in create_connection_name.")
+            pass
+
+        return None 
+
+    def check_connection_list(self, names):
+        for name in names:
+            if name in self.connections.keys() : return True
+        return False
+
+    def connect_ports(self, paths):
+        try:
+            pp1 = None
+            pp2 = None
+            con = None
+            path1=str(paths[0].strip())
+            path2=str(paths[1].strip())
+
+            if self.check_connection(path1, path2):
+                print ("Connection already exist.")
+                return None
+
+            cnames = self.create_connection_name(path1, path2)
+            if not cnames:
+                print ("Invalid Path: %s, %s" % (path1, path2))
+                return None
+        
+            name1, port1 = self.get_name_port(path1)
+            name2, port2 = self.get_name_port(path2)
+
+            pp1 = self.get_named_dataport(name1, port1)
+            pp2 = self.get_named_dataport(name2, port2)
+
+            if pp1 and pp2:
+                con = IOConnector([pp1, pp2], cnames[0])
+                con.connect()
+                self.connections[con.name] = con
+        except:
+            traceback.print_exc()
+            print ("Connection error")
+            pass
+        return con
+
+    def find_connection(self, path1, path2):
+        path1=str(path1.strip())
+        path2=str(path2.strip())
+        cnames = self.create_connection_name(path1, path2)
+
+        if not cnames:
+            print ("Invalid Path: %s, %s" % (path1, path2))
+            return None
+        
+        if cnames[0] in self.connections:
+            return [cnames[0], self.connections[cnames[0]] ]
+        if cnames[1] in self.connections:
+            return [cnames[1], self.connections[cnames[1]] ]
+
+        print ("No connection exists.")
+        return None
+
+    def disconnect_ports(self, path1, path2):
+        path1=str(path1.strip())
+        path2=str(path2.strip())
+        if not self.check_connection(path1, path2):
+            print ("No connection exist.")
+            return None
+
+        res = self.remove_connection(path1, path2)
+        if res:
+            con = find_connection(path1, path2)
+            del(self.connections[con[0]])
+            return con[0]
+
+        return res
+
+    def retrieve_connection_profiles(self, path1):
+        name1, port1 = self.get_name_port(path1)
+        try:
+            pp1 = get_named_dataport(name1, port1, self.name_space)
+            return pp1.get_connections()
+        except:
+            return []
+
+    def check_connection(self, path1, path2):
+        connectors1 = self.retrieve_connection_profiles(path1)
+        connectors2 = self.retrieve_connection_profiles(path2)
+        for con in connectors1:
+            cid = con.connector_id
+            for con2 in connectors2:
+                if cid == con2.connector_id : return con
+        return None
+
+    def remove_connection(self, path1, path2):
+        con = self.check_connection(path1, path2)
+        if con :
+            con.ports[0].disconnect(con.connector_id)
+            return con
+        else:
+            print ("No Connections")
+            return False
+
+    def disconnect_all(self, path1):
+        cprofs = self.retrieve_connection_profiles(path1)
+        for x in cprofs:
+            x.ports[0].disconnect(x.connector_id)
+
+    def make_connection(self, paths, dim=","):
+        ports = None
+        if type(paths) == str: 
+            ports = paths.split(dim)
+        elif type(paths) == list:
+            ports = paths
+        else:
+            return None
+        if len(ports) == 2:
+            return self.connect_ports(ports[0], ports[1])
+        return None
+
+    def delete_connection(self, paths, dim=","):
+        ports = None
+        if type(paths) == str: 
+            ports = paths.split(dim)
+        elif type(paths) == list:
+            ports = paths
+        else:
+            return None
+        if len(ports) == 2:
+            return self.disconnect_ports(ports[0], ports[1])
+    
+    def clear_connection_list(self):
+        self.connections = []
