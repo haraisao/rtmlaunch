@@ -13,6 +13,7 @@ import traceback
 
 import rtcpkg as pkg
 import rtc_handle as rh
+import rtc_handle_tool as rth
 
 __name_server__ = None
 __system_editor__ = None
@@ -94,6 +95,7 @@ class RtcMgr(object):
     self.initNS()
     self.name_space = self.rtm_env.name_space['localhost']
     self.update()
+    rth.NS = self.name_space
 
   #
   #   

@@ -1,39 +1,98 @@
 #!/usr/bin/env python
 #
-#  Simple Viewer (test implementation...)
+#  Copyright (C) 2018 Isao Hara, All right reserved.
+#  Released undet the MIT license
+#
 import sys
-import Tkinter
-#import threading
+import threading
 
-import ScrolledText
+try:
+    import Tkinter as tk
+except:
+    import tkinter as tk
 
+try:
+    import ScrolledText
+except:
+    import tkinter.sctolledtext as ScrolledText
 
+#
+#
 class RedirectText(object):
-    def __init__(self, text_ctrl):
+    def __init__(self, text_ctrl, parent):
         self.output = text_ctrl
+        self.parent = parent
 
     def write(self, string):
-        self.output.configure(state = 'normal')
-        self.output.insert(Tkinter.END, string)
-        self.output.configure(state = 'disabled')
+        try:
+            self.parent.lock()
+            self.output.insert(tk.END, string)
+            self.output.see('end')
+            self.parent.unlock()
+        except:
+            pass
 
+#
+#
 class OutViewer(object):
     def __init__(self):
-        self.root = Tkinter.Tk()
-        self.frame = Tkinter.Frame(self.root)
+        self.root = None
+        self.scrtxt = None
+        self.rdtxt = None
+        self.locking = threading.RLock()
+
+    def createViewer(self, root=None, use_top=False):
+        if not root : 
+            self.root = tk.Tk()
+        
+        if use_top :
+            self.top = tk.Toplevel()
+        else:
+            self.top = self.root
+
+        self.frame = tk.Frame(self.top)
         self.frame.pack()
   
-        self.scrtxt = ScrolledText.ScrolledText(self.frame, state='disabled')
+        self.toolbar = tk.Frame(self.frame)
+        b1 = tk.Button(self.toolbar, text="Clear", width=6, command=self.clear)
+        b1.pack(side="left", padx=2, pady=2)
+
+        b1 = tk.Button(self.toolbar, text="Captue", width=6, command=self.setStdout)
+        b1.pack(side="left", padx=4, pady=2)
+
+        b1 = tk.Button(self.toolbar, text="Release", width=6, command=self.resetStdout)
+        b1.pack(side="left", padx=2, pady=2)
+
+        self.toolbar.pack(side="top", fill=tk.X)
+
+        self.scrtxt = ScrolledText.ScrolledText(self.frame)
         self.scrtxt.configure(font='TkFixedFont')
-        self.scrtxt.pack()
+        self.scrtxt.pack(side="top")
 
+        self.rdtxt = RedirectText(self.scrtxt, self)
+        self.setStdout()
 
-        self.rdtxt = RedirectText(self.scrtxt)
-        #sys.stdout = self.rdtxt
+    def clear(self):
+        if self.scrtxt:
+            self.lock()
+            self.scrtxt.delete('1.0', tk.END+'-1c')
+            self.unlock()
+
+    def lock(self):
+        self.locking.acquire()
+
+    def unlock(self):
+        self.locking.release()
+
     def setStdout(self):
-        sys.stdout = self.rdtxt
+        if self.rdtxt:
+            self.lock()
+            sys.stdout = self.rdtxt
+            self.unlock()
     
     def resetStdout(self):
+        self.lock()
         sys.stdout = sys.__stdout__
+        self.unlock()
 
 

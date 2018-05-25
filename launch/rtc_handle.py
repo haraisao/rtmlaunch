@@ -1,7 +1,13 @@
 #/usr/bin/env python
 # -*- coding: utf-8 -*-
 # -*- Python -*-
+'''
+ This file is included in the rtmtools('https://github.com/takashi-suehiro/rtmtools').
 
+ Copyright (c) 2008-2014 takashi-suehiro, UEC, Japan, All Rights Reserverd
+
+ Released under the MIT License http://opensource.org/licenses/MIT
+'''
 from __future__ import print_function
 import sys
 from omniORB import CORBA, URI
