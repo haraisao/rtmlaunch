@@ -143,7 +143,7 @@ class NameSpace :
                 if re.search(pat, name):
                     res[name] = self.rtc_handles[name]
         except:
-            trackback.print_exc()
+            traceback.print_exc()
             pass
         return res
 
@@ -723,8 +723,8 @@ class ConnectionManager(object):
                 for pname2, port2 in h2.inports.items():
                     if port1.data_type == port2.data_type:
                         res.append((names[0]+":"+pname1, names[1]+":"+pname2))
-            for pname1, port1 in h1.inports.items():
-                for pname2, port2 in h2.outports.items():
+            for pname1, port1 in h2.outports.items():
+                for pname2, port2 in h1.inports.items():
                     if port1.data_type == port2.data_type:
                         res.append((names[0]+":"+pname1, names[1]+":"+pname2))
         except:
@@ -825,27 +825,34 @@ class ConnectionManager(object):
         print ("No connection exists.")
         return None
 
-    def disconnect_ports(self, path1, path2):
-        path1=str(path1.strip())
-        path2=str(path2.strip())
-        if not self.check_connection(path1, path2):
-            print ("No connection exist.")
-            return None
+    def disconnect_ports(self, paths):
+        res =None
+        try:
+            path1=str(paths[0].strip())
+            path2=str(paths[1].strip())
+            if not self.check_connection(path1, path2):
+                print ("No connection exist.")
+                return None
 
-        res = self.remove_connection(path1, path2)
-        if res:
-            con = find_connection(path1, path2)
-            del(self.connections[con[0]])
-            return con[0]
+            res = self.remove_connection(path1, path2)
+            if res:
+                con = self.find_connection(path1, path2)
+                del(self.connections[con[0]])
+                return con[0]
+        except:
+            traceback.print_exc()
+            res = None
 
         return res
 
     def retrieve_connection_profiles(self, path1):
         name1, port1 = self.get_name_port(path1)
         try:
-            pp1 = get_named_dataport(name1, port1, self.name_space)
+            print(name1, port1)
+            pp1 = self.get_named_dataport(name1, port1)
             return pp1.get_connections()
         except:
+            print('error in retrieve_connection_profile')
             return []
 
     def check_connection(self, path1, path2):

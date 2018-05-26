@@ -53,6 +53,16 @@ def eSEAT_cmd(fname=""):
 
 #
 #
+def openrtp():
+  if os.name == 'posix':
+    file = findFile('openrtp')
+  else:
+    file = findFile('RTSystemEditorRCP.exe')
+
+  return ProcessManager(file)
+
+#
+#
 def findFile(fname, top=None):
   if top == None: top = __rtc_home__
   pth = pkg.findFile(top, fname)
@@ -132,6 +142,50 @@ class RtcMgr(object):
        res.append(self.name_space.rtc_handles[name])
     return res
 
+  def get_rtc_handles(self, pat=None):
+    self.update()
+    if pat is None: pat='.rtc'
+    return self.name_space.find_handles(pat)
+
+  def get_inports(self, pat=None):
+    if pat is None: pat='.rtc'
+    rtcs = self.name_space.find_handles(pat)
+    if len(rtcs) == 1:
+      name, handle = rtcs.items()[0]
+      return [ name+":"+p for p in handle.inports]
+    else:
+      print("Too many rtcs: ", rtcs.keys())
+    return None
+
+  def get_outports(self, pat=None):
+    if pat is None: pat='.rtc'
+    rtcs = self.name_space.find_handles(pat)
+    if len(rtcs) == 1:
+      name, handle = rtcs.items()[0]
+      return [ name+":"+p for p in handle.outports]
+    else:
+      print("Too many rtcs: ", rtcs.keys())
+    return None
+
+  def get_services(self, pat=None):
+    if pat is None: pat='.rtc'
+    rtcs = self.name_space.find_handles(pat)
+    if len(rtcs) == 1:
+      name, handle = rtcs.items()[0]
+      return [ name+":"+p for p in handle.services]
+    else:
+      print("Too many rtcs: ", rtcs.keys())
+    return None
+
+  def find_available_connections(self, rtcs):
+    return self.name_space.connection_manager.find_available_connections(rtcs)
+
+  def connect_ports(self, ports):
+    return self.name_space.connection_manager.connect_ports(ports)
+
+  def disconnect_ports(self, ports):
+    return self.name_space.connection_manager.disconnect_ports(ports)
+
   def get_port_info(self, name):
     hlist=self.get_handle(name)
     if len(hlist) == 1:
@@ -155,17 +209,21 @@ class RtcMgr(object):
     return None
 
 
+
 #
 #
 class ProcessManager(object):
   #
   #
-  def __init__(self, fname, stderr=None, stdout=None, stdin=None):
+  def __init__(self, fname, stderr=None, stdout=None, stdin=None, find=None):
     self.popen = None
     self.env = None
     self.f_out = stdout
     self.f_err = stderr
     self.f_in = stdin
+    if find :
+      fname=findFile(fname)
+      print("Filename is ", fname)
     if fname:
       self.setFile( fname )
   #
