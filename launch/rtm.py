@@ -331,7 +331,8 @@ def initCORBA():
         if not nshost:
             nshost = socket.gethostname()
         if not nsport:
-            nsport = 15005
+            nsport = 2809
+            #nsport = 15005
 
     print("configuration ORB with %s:%s"%(nshost, nsport))
     os.environ['ORBInitRef'] = 'NameService=corbaloc:iiop:%s:%s/NameService' % \
