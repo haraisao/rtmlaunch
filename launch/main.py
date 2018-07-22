@@ -1,7 +1,7 @@
 #
 # Simple Launcher for OpenHRI and OpenRTM-aist
 # Released under the MIT license
-# Copyright(C) 2018 Isao Hara, All right reserved.
+# Copyright(C) 2018 Isao Hara, All rights reserved.
 #
 from __future__ import print_function
 import sys
