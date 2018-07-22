@@ -264,6 +264,29 @@ class ProcessManager(object):
       if self.popen.poll():
         self.remove_pid_file()
 
+
+class CmdProcess(ProcessManager):
+  def __init__(self, fname):
+    ProcessManager.__init__(self, fname, find=True)
+    self.cmd=["C:\\Windows\\System32\\cmd.exe", "/c", "start" ]
+  
+  def run(self):
+    if os.path.exists(self.pid_file):
+      print("Process %s is already running..." % self.exec_file_name)
+      return
+    try:
+      print(self.cmd + self.exec_file_name)
+      self.popen = subprocess.Popen(self.cmd + self.exec_file_name, env=self.env,
+         stdout=self.f_out, stdin=self.f_in, stderr=self.f_err)
+      #if not self.popen.poll() :
+      #  with open(self.pid_name, "w") as f:
+      #    f.write(self.popen.pid)
+      #    f.close()
+    except:
+      import traceback
+      traceback.print_exc()
+      print("Error in run()")
+      pass
 #
 #
 #
